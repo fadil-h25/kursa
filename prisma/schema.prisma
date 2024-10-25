@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum userRole{
+  student
+  admin
+}
+
+
+
+model Student_program{
+  program_id Int @id @db.Int  @default(autoincrement())
+  program_name String @db.VarChar(100)
+  @@map("student_programs")
+  @@unique([program_name])
+  student Student[]
+}
+model Student_class{
+  class_id Int @id @db.Int @default(autoincrement())
+  class_name String @db.VarChar(100) 
+  @@unique([class_name])
+  @@map("student_classes")
+  student Student[]
+  
+}
+
+model Student{
+  id String @id @db.VarChar(36) @default(uuid())
+  name String  @db.VarChar(100)
+  nim  String @db.VarChar(20) @unique
+  email String @db.VarChar(100) @unique
+  password String @db.VarChar(60)
+  class_id Int @db.Int
+  program_id Int @db.Int
+  student_class Student_class @relation(fields: [class_id], references: [class_id])
+  student_program Student_program @relation(fields: [program_id], references: [program_id])
+
+  student_verification Student_verification?
+  @@map("students")
+
+}
+
+model Admin {
+  id String @id @db.VarChar(40) @default(uuid())
+  name String @db.VarChar(100)
+  password String @db.VarChar(60)
+  email String @db.VarChar(100) @unique
+  level Int @db.SmallInt
+  
+  @@map("admins")
+  
+}
+
+enum verification_status{
+  active
+  inactive
+
+}
+
+model Student_verification{
+ student_id String @db.VarChar(36) @id
+ verification_status verification_status @default(inactive)
+ verification_sent DateTime @db.Timestamp() @default(now())
+ verification_date DateTime? @db.Timestamp()
+ student Student @relation(fields: [student_id], references: [id])
+
+  @@map("Student_verifications")
+
+}
+
+
